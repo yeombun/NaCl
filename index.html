@@ -1,12 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Portfolio</title>
+  <meta charset="UTF-8">
+  <title>🌡️ CM31P 실시간 모니터링</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0; padding: 0;
+      background: linear-gradient(135deg, #e0f7fa, #e1bee7);
+      color: #333;
+    }
+    header {
+      text-align: center; padding: 20px;
+      background: linear-gradient(90deg, #2196f3, #9c27b0);
+      color: white; font-size: 28px; font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .card-container { display: flex; gap: 20px; margin: 20px; }
+    .card {
+      flex: 1; background: white; border-radius: 12px;
+      padding: 20px; text-align: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      transition: transform 0.2s;
+    }
+    .card:hover { transform: scale(1.05); }
+    .label { font-size: 14px; color: #777; }
+    .value { font-size: 22px; font-weight: bold; margin-top: 5px; }
+    .status-disconnected { color: red; font-weight: bold; }
+    .status-connected { color: green; font-weight: bold; }
+    .charts { display: flex; gap: 20px; margin: 20px; }
+    .chart { flex: 1; background: white; border-radius: 12px; padding: 15px;
+             box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+    .btn {
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      border: none; color: white; padding: 12px 20px; margin: 20px;
+      font-size: 16px; border-radius: 8px; cursor: pointer;
+      transition: 0.3s;
+    }
+    .btn:hover { background: linear-gradient(90deg, #388e3c, #66bb6a); }
+  </style>
 </head>
 <body>
-  <p>Hello, World!</p>
+  <header>🌡️ CM31P 실시간 모니터링 (웹)</header>
+  
+  <div class="card-container">
+    <div class="card"><div class="label">현재 농도(%)</div><div id="conc" class="value">-</div></div>
+    <div class="card"><div class="label">현재 온도(°C)</div><div id="temp" class="value">-</div></div>
+    <div class="card"><div class="label">마지막 업데이트</div><div id="time" class="value">-</div></div>
+    <div class="card"><div class="label">상태</div><div id="status" class="value status-disconnected">Disconnected</div></div>
+  </div>
+
+  <button class="btn" onclick="downloadExcel()">📥 엑셀 다운로드</button>
+
+  <div class="charts">
+    <div id="concChart" class="chart"></div>
+    <div id="tempChart" class="chart"></div>
+  </div>
+
+  <script>
+    let concData = [], tempData = [], timeData = [];
+
+    async function fetchData() {
+      try {
+        const response = await fetch("data.json?cache=" + Date.now());
+        const data = await response.json();
+
+        // 카드 업데이트
+        document.getElementById("time").innerText = data.timestamp || "-";
+        document.getElementById("conc").innerText = data.concentration + " %";
+        document.getElementById("temp").innerText = data.temperature + " °C";
+        document.getElementById("status").innerText = "Connected";
+        document.getElementById("status").className = "value status-connected";
+
+        // 그래프 데이터 누적
+        timeData.push(data.timestamp);
+        concData.push(data.concentration);
+        tempData.push(data.temperature);
+
+        if (timeData.length > 50) { 
+          timeData.shift(); concData.shift(); tempData.shift();
+        }
+
+        Plotly.newPlot('concChart', [{
+          x: timeData, y: concData, mode: 'lines+markers', name: '농도',
+          line: { shape: 'spline', color: '#2196f3' }
+        }], { title: '농도(Concentration, %)' });
+
+        Plotly.newPlot('tempChart', [{
+          x: timeData, y: tempData, mode: 'lines+markers', name: '온도',
+          line: { shape: 'spline', color: '#e91e63' }
+        }], { title: '온도(Temperature, °C)' });
+
+      } catch (e) {
+        document.getElementById("status").innerText = "Disconnected";
+        document.getElementById("status").className = "value status-disconnected";
+      }
+    }
+
+    // 엑셀 다운로드
+    function downloadExcel() {
+      let ws_data = [["시간", "농도(%)", "온도(°C)"]];
+      for (let i = 0; i < timeData.length; i++) {
+        ws_data.push([timeData[i], concData[i], tempData[i]]);
+      }
+      let wb = XLSX.utils.book_new();
+      let ws = XLSX.utils.aoa_to_sheet(ws_data);
+      XLSX.utils.book_append_sheet(wb, ws, "CM31P_Data");
+      XLSX.writeFile(wb, "CM31P_sensor_log.xlsx");
+    }
+
+    setInterval(fetchData, 3000);
+    window.onload = fetchData;
+  </script>
 </body>
 </html>
