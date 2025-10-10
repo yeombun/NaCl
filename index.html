@@ -39,7 +39,7 @@
     </div>
     <div class="card">
       <p><b>최신 농도</b></p>
-      <div class="value" id="conc">- µS/cm</div>
+      <div class="value" id="conc">- %</div>
     </div>
     <div class="card">
       <p><b>최신 온도</b></p>
@@ -71,7 +71,7 @@
         if (sensorData && sensorData.length > 0) {
           const latestData = sensorData[sensorData.length - 1];
           document.getElementById("time").innerText = latestData.time.split(' ')[1];
-          document.getElementById("conc").innerText = latestData.conc.toFixed(3) + " µS/cm";
+          document.getElementById("conc").innerText = latestData.conc.toFixed(3) + "%";
           document.getElementById("temp").innerText = latestData.temp.toFixed(1) + " °C";
 
           const times = sensorData.map(d => d.time);
@@ -108,4 +108,5 @@
     setInterval(updateDashboard, 60000);
   </script>
 </body>
+
 </html>
