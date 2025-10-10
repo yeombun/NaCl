@@ -51,7 +51,7 @@
 
 <script>
     // --- 1. 사용자 설정 ---
-    const REPO_NAME = "yeombun/NaCl"; // 본인 GitHub 저장소 이름
+ const REPO_NAME = "yeombun/NaCl"; // 본인 GitHub 저장소 이름
     // Firebase 콘솔에서 복사한 firebaseConfig 객체를 여기에 붙여넣으세요.
  const firebaseConfig = {
   apiKey: "AIzaSyAZ87onI6IAsbbDnSOgC_9YeONl4Kk9NwI",
@@ -64,8 +64,7 @@
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-  
+    firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const sensorRef = database.ref('sensors/cm31p_realtime');
 
@@ -118,3 +117,4 @@ const app = initializeApp(firebaseConfig);
 </script>
 </body>
 </html>
+
