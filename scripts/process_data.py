@@ -16,25 +16,21 @@ KST = timezone(timedelta(hours=9))
 
 def post_comment(issue_number, comment_body):
     url = f"{BASE_URL}/issues/{issue_number}/comments"
-    response = requests.post(url, headers=HEADERS, json={"body": comment_body})
-    print(f"✅ 이슈 댓글 기록: {response.status_code}")
+    requests.post(url, headers=HEADERS, json={"body": comment_body})
 
 def create_alert_issue(title, body, labels):
     url = f"{BASE_URL}/issues"
-    response = requests.post(url, headers=HEADERS, json={"title": title, "body": body, "labels": labels})
-    print(f"✅ 알림 이슈 생성: {response.status_code}")
+    requests.post(url, headers=HEADERS, json={"title": title, "body": body, "labels": labels})
 
 def main():
     sensor_payload = os.getenv('SENSOR_DATA')
-    if not sensor_payload:
-        print("⚠️ 스케줄 실행입니다.")
-        return
+    if not sensor_payload: return
 
     data = json.loads(sensor_payload)
     temp, conc = data.get("temperature"), data.get("concentration")
     now_kst_str = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
 
-    post_comment(ISSUE_LOG_ID, f"🌡️ **온도**: `{temp}`°C | 💧 **농도**: `{conc}`µS/cm (측정 시각: {now_kst_str})")
+    post_comment(ISSUE_LOG_ID, f"🌡️ **온도**: `{temp}`°C | 💧 **농도**: `{conc}`µS/cm (백업 시각: {now_kst_str})")
 
     try:
         with open('data.json', 'r', encoding='utf-8') as f: all_data = json.load(f)
@@ -44,7 +40,6 @@ def main():
     
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(all_data[-100:], f, indent=2, ensure_ascii=False)
-    print("✅ data.json 파일 업데이트 완료")
     
     if temp > TEMP_THRESHOLD:
         create_alert_issue(f"🚨 [온도 경보] 임계치 초과: {temp}°C", f"위험 수준의 온도(`{temp}`°C)가 감지되었습니다.\n- 확인 시각: {now_kst_str}", ["alert", "temperature"])
