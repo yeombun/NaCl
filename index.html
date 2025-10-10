@@ -59,7 +59,19 @@
     // 본인의 GitHub 저장소 이름을 "사용자명/저장소명" 형식으로 입력하세요.
     const REPO_NAME = "yeombun/NaCl"; 
     // ------------------
+const firebaseConfig = {
+  apiKey: "AIzaSyAZ87onI6IAsbbDnSOgC_9YeONl4Kk9NwI",
+  authDomain: "nacl-monitoring.firebaseapp.com",
+  databaseURL: "https://nacl-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "nacl-monitoring",
+  storageBucket: "nacl-monitoring.firebasestorage.app",
+  messagingSenderId: "61405500625",
+  appId: "1:61405500625:web:bffb394bb1bc4ce04261f0"
+};
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+    
     const DATA_URL = `https://raw.githubusercontent.com/${REPO_NAME}/main/data.json?t=${new Date().getTime()}`;
     const ALERTS_URL = `https://api.github.com/repos/${REPO_NAME}/issues?labels=alert&state=open`;
 
@@ -110,5 +122,6 @@
 </body>
 
 </html>
+
 
 
