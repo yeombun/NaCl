@@ -1,0 +1,35 @@
+name: IoT Sensor Monitoring
+
+on:
+  repository_dispatch:
+    types: [sensor-data]
+  schedule:
+    - cron: '0 15 * * *'
+
+jobs:
+  process-sensor-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Process Data and Update
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_PAT }}
+          SENSOR_DATA: ${{ github.event.client_payload.data }}
+        run: python ./scripts/process_data.py
+      
+      - name: Commit data files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git diff-index --quiet HEAD || git commit -m "Update sensor data" && git push
