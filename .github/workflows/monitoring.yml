@@ -9,6 +9,11 @@ on:
 jobs:
   process-sensor-data:
     runs-on: ubuntu-latest
+
+    # Actions가 저장소에 파일을 쓸 수 있도록 권한을 부여합니다.
+    permissions:
+      contents: write
+
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
@@ -23,7 +28,7 @@ jobs:
 
       - name: Process Data and Update
         env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # 여기서 ACTIONS_PAT 대신 기본 토큰을 사용해도 됩니다.
           SENSOR_DATA: ${{ github.event.client_payload.data }}
         run: python ./scripts/process_data.py
       
