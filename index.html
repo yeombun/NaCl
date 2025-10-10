@@ -2,33 +2,29 @@
 <html lang="ko">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>🌡️ CM31P 모니터링</title>
+  <title>🌡️ CM31P 실시간 대시보드</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <style>
     body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #f9f9f9; }
     h1 { color: #1976d2; }
     .container { max-width: 1200px; margin: 0 auto; }
-    /* 알림 섹션 스타일 추가 */
     #alerts { border: 1px solid #d73a49; border-radius: 6px; padding: 10px; margin: 20px 0; background: #ffdce0; text-align: left;}
     #alerts h2 { margin-top: 0; color: #d73a49; font-size: 1.2em; }
-    .alert-item a { color: #d73a49; font-weight: 600; text-decoration: none; }
-    .alert-item a:hover { text-decoration: underline; }
-    #alert-list { padding-left: 20px; margin-bottom: 0; }
-    /* 기존 스타일 유지 */
     .cards { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; flex-wrap: wrap; }
     .card { border: 2px solid #1976d2; border-radius: 10px; padding: 20px; width: 200px; background: white; }
     .value { font-size: 1.8em; font-weight: bold; margin-top: 10px; }
     #graphs { display: flex; justify-content: space-around; flex-wrap: wrap; }
     .graph { width: 45%; min-width: 350px; }
-    .last-updated { text-align: center; margin-top: 20px; color: #586069; font-size: 12px; }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>🌡️ CM31P 모니터링</h1>
+  <h1><img src="https://emojicdn.elk.sh/🌡️" style="vertical-align: -0.1em; height: 1em;"> CM31P 실시간 모니터링</h1>
 
   <div id="alerts">
-    <h2>🚨 현재 발생한 알림</h2>
+    <h2><img src="https://emojicdn.elk.sh/🚨" style="vertical-align: -0.1em; height: 1em;"> 현재 발생한 알림</h2>
     <ul id="alert-list"><li>알림을 불러오는 중...</li></ul>
   </div>
 
@@ -51,15 +47,13 @@
     <div id="concGraph" class="graph"></div>
     <div id="tempGraph" class="graph"></div>
   </div>
-  <p class="last-updated" id="last-updated-text"></p>
 </div>
 
-  <script>
-    // --- 사용자 설정 ---
-    // 본인의 GitHub 저장소 이름을 "사용자명/저장소명" 형식으로 입력하세요.
-    const REPO_NAME = "yeombun/NaCl"; 
-    // ------------------
-const firebaseConfig = {
+<script>
+    // --- 1. 사용자 설정 ---
+    const REPO_NAME = "yeombun/NaCl"; // 본인 GitHub 저장소 이름
+    // Firebase 콘솔에서 복사한 firebaseConfig 객체를 여기에 붙여넣으세요.
+ const firebaseConfig = {
   apiKey: "AIzaSyAZ87onI6IAsbbDnSOgC_9YeONl4Kk9NwI",
   authDomain: "nacl-monitoring.firebaseapp.com",
   databaseURL: "https://nacl-monitoring-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -71,57 +65,56 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+  
+    const database = firebase.database();
+    const sensorRef = database.ref('sensors/cm31p_realtime');
+
+    const MAX_POINTS = 50;
+    let timeData = [], concData = [], tempData = [];
+
+    sensorRef.limitToLast(1).on('child_added', (snapshot) => {
+        const data = snapshot.val();
+        const ts = new Date(data.timestamp);
+
+        document.getElementById("time").innerText = ts.toLocaleTimeString('ko-KR');
+        document.getElementById("conc").innerText = (data.concentration * 100).toFixed(3) + " %";
+        document.getElementById("temp").innerText = data.temperature.toFixed(1) + " °C";
+
+        timeData.push(ts);
+        concData.push(data.concentration * 100);
+        tempData.push(data.temperature);
+        if (timeData.length > MAX_POINTS) {
+            timeData.shift(); concData.shift(); tempData.shift();
+        }
+        updateGraphs();
+    });
     
-    const DATA_URL = `https://raw.githubusercontent.com/${REPO_NAME}/main/data.json?t=${new Date().getTime()}`;
-    const ALERTS_URL = `https://api.github.com/repos/${REPO_NAME}/issues?labels=alert&state=open`;
-
-    async function updateDashboard() {
-      try {
-        const dataResponse = await fetch(DATA_URL);
-        const sensorData = await dataResponse.json();
-        
-        if (sensorData && sensorData.length > 0) {
-          const latestData = sensorData[sensorData.length - 1];
-          document.getElementById("time").innerText = latestData.time.split(' ')[1];
-          document.getElementById("conc").innerText = latestData.conc.toFixed(3) + "%";
-          document.getElementById("temp").innerText = latestData.temp.toFixed(1) + " °C";
-
-          const times = sensorData.map(d => d.time);
-          const concs = sensorData.map(d => d.conc);
-          const temps = sensorData.map(d => d.temp);
-          
-          Plotly.newPlot("concGraph", [{x: times, y: concs, type: "scatter", mode: "lines+markers", line: { color: "#2196f3" }}], {title: "농도 변화", margin: { t: 40 }});
-          Plotly.newPlot("tempGraph", [{x: times, y: temps, type: "scatter", mode: "lines+markers", line: { color: "#e91e63" }}], {title: "온도 변화", margin: { t: 40 }});
-        }
-      } catch (e) { console.error("센서 데이터 로딩 실패:", e); }
-
-      try {
-        const alertsResponse = await fetch(ALERTS_URL);
-        const alerts = await alertsResponse.json();
-        const alertList = document.getElementById('alert-list');
-        
-        if (alerts && alerts.length > 0) {
-          alertList.innerHTML = '';
-          alerts.forEach(issue => {
-            const item = document.createElement('li');
-            const createdTime = new Date(issue.created_at).toLocaleString('ko-KR');
-            item.innerHTML = `<span class="alert-item"><a href="${issue.html_url}" target="_blank">[#${issue.number}] ${issue.title}</a> (발생: ${createdTime})</span>`;
-            alertList.appendChild(item);
-          });
-        } else {
-            alertList.innerHTML = '<li>새로운 알림이 없습니다.</li>';
-        }
-      } catch (e) { console.error("알림 로딩 실패:", e); }
-
-      document.getElementById('last-updated-text').innerText = `마지막 업데이트: ${new Date().toLocaleString('ko-KR')}`;
+    function updateGraphs() {
+        Plotly.newPlot("concGraph", [{x: timeData, y: concData, type: "scatter", mode: "lines+markers", line: {color: "#2196f3"}}], {title: "농도 변화", margin: {t: 40}});
+        Plotly.newPlot("tempGraph", [{x: timeData, y: tempData, type: "scatter", mode: "lines+markers", line: {color: "#e91e63"}}], {title: "온도 변화", margin: {t: 40}});
     }
 
-    updateDashboard();
-    setInterval(updateDashboard, 60000);
-  </script>
+    const ALERTS_URL = `https://api.github.com/repos/${REPO_NAME}/issues?labels=alert&state=open`;
+    async function fetchAlerts() {
+        try {
+            const response = await fetch(ALERTS_URL);
+            const alerts = await response.json();
+            const alertList = document.getElementById('alert-list');
+            if (alerts && alerts.length > 0) {
+                alertList.innerHTML = '';
+                alerts.forEach(issue => {
+                    const item = document.createElement('li');
+                    item.innerHTML = `[#${issue.number}] <a href="${issue.html_url}" target="_blank">${issue.title}</a> (발생: ${new Date(issue.created_at).toLocaleString('ko-KR')})`;
+                    alertList.appendChild(item);
+                });
+            } else {
+                alertList.innerHTML = '<li>새로운 알림이 없습니다.</li>';
+            }
+        } catch (e) { console.error("알림 로딩 실패:", e); }
+    }
+    
+    fetchAlerts();
+    setInterval(fetchAlerts, 60000);
+</script>
 </body>
-
 </html>
-
-
-
