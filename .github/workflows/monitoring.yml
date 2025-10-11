@@ -2,15 +2,19 @@ name: IoT Sensor Monitoring
 
 on:
   repository_dispatch:
-    types: [sensor-data]
+    types: [sensor-data, clear-alerts] # clear-alerts 트리거 추가
   schedule:
     - cron: '0 15 * * *'
 
 jobs:
+  # 기존 데이터 처리 작업 (변경 없음)
   process-sensor-data:
     runs-on: ubuntu-latest
+    # "if" 조건을 추가하여 sensor-data 요청일 때만 실행되도록 함
+    if: github.event.action == 'sensor-data'
     permissions:
       contents: write
+      issues: write # 이슈에 댓글을 남기므로 권한 추가
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
@@ -31,3 +35,19 @@ jobs:
           git config --local user.name "GitHub Action"
           git add -A
           git diff-index --quiet HEAD || git commit -m "Update sensor data backup" && git push
+
+  # --- [새로 추가된 작업] 알림 초기화 ---
+  clear-alerts:
+    runs-on: ubuntu-latest
+    # "if" 조건을 추가하여 clear-alerts 요청일 때만 실행되도록 함
+    if: github.event.action == 'clear-alerts'
+    permissions:
+      issues: write # 이슈를 close 해야 하므로 쓰기 권한 필수
+    steps:
+      - name: Close all alert issues
+        env:
+          # GitHub CLI는 기본 GITHUB_TOKEN을 자동으로 사용합니다.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue list --label "alert" --state "open" --json number --jq '.[].number' | xargs -I {} gh issue close {}
+          echo "All alert issues have been closed."
