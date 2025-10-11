@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 
 # --- 사용자 설정 ---
 ISSUE_LOG_ID = 1      # 데이터를 기록할 GitHub Issue의 번호
-TEMP_THRESHOLD = 22.0 # 온도 위험 임계치
+TEMP_THRESHOLD = 27.0 # 온도 위험 임계치
 # ------------------
 
 GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
