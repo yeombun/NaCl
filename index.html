@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>🌡️ CM31P 실시간 대시보드</title>
+  <title>🌡️ 염분농도와 온도 모니터링시스템/title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -27,7 +27,7 @@
 </head>
 <body>
 <div class="container">
-  <h1><img src="https://emojicdn.elk.sh/🌡️" style="vertical-align: -0.1em; height: 1em;"> CM31P 실시간 모니터링</h1>
+  <h1><img src="https://emojicdn.elk.sh/🌡️" style="vertical-align: -0.1em; height: 1em;"> 염분농도와 온도 모니터링</h1>
   
   <div id="alerts">
     <h2><img src="https://emojicdn.elk.sh/🚨" style="vertical-align: -0.1em; height: 1em;"> 현재 발생한 알림</h2>
@@ -49,7 +49,7 @@
       <div class="value" id="time">-</div>
     </div>
     <div class="card">
-      <p><b>최신 농도</b></p>
+      <p><b>최신 염분농도</b></p>
       <div class="value" id="conc">- %</div>
     </div>
     <div class="card">
@@ -66,7 +66,7 @@
   
 <script>
     // --- 1. 사용자 설정 ---
- const REPO_NAME ="yeombun/NaCl"; // GitHub 저장소 이름
+ const REPO_NAME ="yeombun/NaCl"; 
     // Firebase 콘솔에서 복사한 firebaseConfig 객체를 여기에 붙여넣으세요.
  const firebaseConfig = {
   apiKey: "AIzaSyAZ87onI6IAsbbDnSOgC_9YeONl4Kk9NwI",
@@ -113,7 +113,7 @@
     });
     
     function updateGraphs(times, concs, temps, titlePrefix = "") {
-        Plotly.newPlot("concGraph", [{x: times, y: concs, type: "scatter", mode: "lines+markers", line: {color: "#2196f3"}}], {title: `${titlePrefix} 농도 변화`, margin: {t: 40}});
+        Plotly.newPlot("concGraph", [{x: times, y: concs, type: "scatter", mode: "lines+markers", line: {color: "#2196f3"}}], {title: `${titlePrefix} 염분농도 변화`, margin: {t: 40}});
         Plotly.newPlot("tempGraph", [{x: times, y: temps, type: "scatter", mode: "lines+markers", line: {color: "#e91e63"}}], {title: `${titlePrefix} 온도 변화`, margin: {t: 40}});
     }
 
@@ -216,5 +216,6 @@
 </script>
 </body>
 </html>
+
 
 
