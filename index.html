@@ -188,9 +188,12 @@
         link.click();
         document.body.removeChild(link);
     });
-
-    
-  
+clearAlertsBtn.addEventListener('click', () => {
+        const GITHUB_ACTIONS_URL = `https://github.com/${REPO_NAME}/actions/workflows/monitoring.yml`;
+        if (confirm("GitHub Actions 페이지로 이동하여 '알림 초기화'를 수동으로 실행하시겠습니까?")) {
+            window.open(GITHUB_ACTIONS_URL, '_blank');
+        }
+    });
     // --- 4. 알림 기능 ---
     const ALERTS_URL = `https://api.github.com/repos/${REPO_NAME}/issues?labels=alert&state=open`;
     async function fetchAlerts() {
@@ -216,6 +219,7 @@
 </script>
 </body>
 </html>
+
 
 
 
