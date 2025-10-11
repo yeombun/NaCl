@@ -55,7 +55,7 @@ def main():
     print(f"✅ {log_filename} 파일에 데이터 저장 완료")
     
     # 알림 및 로그 기능은 그대로 유지
-    post_comment(ISSUE_LOG_ID, f"🌡️ **온도**: `{temp}`°C | 💧 **농도**: `{conc}`µS/cm (백업 시각: {now_kst_str})")
+    post_comment(ISSUE_LOG_ID, f"🌡️ **온도**: `{temp}`°C | 💧 **농도**: `{conc}`% (백업 시각: {now_kst_str})")
     
     if temp > TEMP_THRESHOLD:
         create_alert_issue(f"🚨 [온도 경보] 임계치 초과: {temp}°C", f"위험 수준의 온도(`{temp}`°C)가 감지되었습니다.\n- 확인 시각: {now_kst_str}", ["alert", "temperature"])
