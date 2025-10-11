@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <title>🌡️ CM31P 실시간 대시보드</title>
+  <title>🌡️ CM31P 실시간 모니터링</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -62,7 +62,7 @@
 
 <script>
     // --- 1. 사용자 설정 ---
- const REPO_NAME ="yeombun/NaCl"; // 본인 GitHub 저장소 이름
+ const REPO_NAME ="yeombun/NaCl"; // GitHub 저장소 이름
     // Firebase 콘솔에서 복사한 firebaseConfig 객체를 여기에 붙여넣으세요.
  const firebaseConfig = {
   apiKey: "AIzaSyAZ87onI6IAsbbDnSOgC_9YeONl4Kk9NwI",
@@ -89,11 +89,13 @@
         const ts = new Date(data.timestamp);
 
         document.getElementById("time").innerText = ts.toLocaleTimeString('ko-KR');
-        document.getElementById("conc").innerText = (data.concentration * 100).toFixed(3) + " %";
+        // document.getElementById("conc").innerText = (data.concentration * 100).toFixed(3) + " %";
+        document.getElementById("conc").innerText = data.concentration.toFixed(3) + " %"; 
         document.getElementById("temp").innerText = data.temperature.toFixed(1) + " °C";
 
         realtimeTimeData.push(ts);
-        realtimeConcData.push(data.concentration * 100);
+      //  realtimeConcData.push(data.concentration * 100);
+        realtimeConcData.push(data.concentration);
         realtimeTempData.push(data.temperature);
         if (realtimeTimeData.length > MAX_POINTS) {
             realtimeTimeData.shift(); realtimeConcData.shift(); realtimeTempData.shift();
@@ -134,7 +136,8 @@
             const historicalData = await response.json();
             
             const times = historicalData.map(d => new Date(d.time));
-            const concs = historicalData.map(d => d.conc * 100);
+            //const concs = historicalData.map(d => d.conc * 100);
+            const concs = historicalData.map(d => d.conc); 
             const temps = historicalData.map(d => d.temp);
             
             updateGraphs(times, concs, temps, `${selectedDate}`);
@@ -175,3 +178,4 @@
 </script>
 </body>
 </html>
+
