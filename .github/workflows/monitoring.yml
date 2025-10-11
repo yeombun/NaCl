@@ -1,20 +1,23 @@
 name: IoT Sensor Monitoring
 
 on:
+  # 라즈베리파이 데이터 수신용 (기존 유지)
   repository_dispatch:
-    types: [sensor-data, clear-alerts] # clear-alerts 트리거 추가
+    types: [sensor-data]
+  # 스케줄 실행용 (기존 유지)
   schedule:
     - cron: '0 15 * * *'
+  # [새로 추가] GitHub Actions 페이지에서 수동으로 실행할 수 있게 하는 트리거
+  workflow_dispatch:
 
 jobs:
-  # 기존 데이터 처리 작업 (변경 없음)
+  # 데이터 처리 작업
   process-sensor-data:
-    runs-on: ubuntu-latest
-    # "if" 조건을 추가하여 sensor-data 요청일 때만 실행되도록 함
-    if: github.event.action == 'sensor-data'
+    # "if" 조건을 수정하여 수동 실행 시에는 이 작업이 실행되지 않도록 함
+    if: github.event_name == 'repository_dispatch' || github.event_name == 'schedule'
     permissions:
       contents: write
-      issues: write # 이슈에 댓글을 남기므로 권한 추가
+      issues: write
     steps:
       - name: Code Checkout
         uses: actions/checkout@v3
@@ -36,17 +39,16 @@ jobs:
           git add -A
           git diff-index --quiet HEAD || git commit -m "Update sensor data backup" && git push
 
-  # --- [새로 추가된 작업] 알림 초기화 ---
+  # 알림 초기화 작업
   clear-alerts:
+    # "if" 조건을 수정하여 수동 실행(workflow_dispatch) 시에만 이 작업이 실행되도록 함
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    # "if" 조건을 추가하여 clear-alerts 요청일 때만 실행되도록 함
-    if: github.event.action == 'clear-alerts'
     permissions:
-      issues: write # 이슈를 close 해야 하므로 쓰기 권한 필수
+      issues: write
     steps:
       - name: Close all alert issues
         env:
-          # GitHub CLI는 기본 GITHUB_TOKEN을 자동으로 사용합니다.
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue list --label "alert" --state "open" --json number --jq '.[].number' | xargs -I {} gh issue close {}
