@@ -12,7 +12,7 @@ jobs:
   process-sensor-data:
     if: github.event_name == 'repository_dispatch' && github.event.action == 'sensor-data' || github.event_name == 'schedule'
     
-    # --- 이 작업의 실행 환경 ---
+    # --- 바로 이 부분이 필수입니다 ---
     runs-on: ubuntu-latest
     
     permissions:
@@ -43,6 +43,7 @@ jobs:
   clear-alerts:
     if: (github.event_name == 'repository_dispatch' && github.event.action == 'clear-alerts') || github.event_name == 'workflow_dispatch'
     
+    # --- 이 작업에도 똑같이 필수입니다 ---
     runs-on: ubuntu-latest
     
     permissions:
